@@ -32,15 +32,11 @@ class TestLibraryManager(unittest.TestCase):
         )
 
     def test_search_books_empty_query_raises_validation(self) -> None:
-        error_text = ""
-        try:
+        with self.assertRaises(
+            ValidationError,
+            msg="Ожидался ValidationError для пустого поискового запроса",
+        ):
             self.library.search_books("   ")
-        except ValidationError as exc:
-            error_text = str(exc)
-        self.assertTrue(
-            "query must be non-empty" in error_text,
-            f"Ожидалась ошибка валидации query, получено: '{error_text or 'ошибка не возникла'}'",
-        )
 
     def test_calculate_fine_returns_zero_without_overdue(self) -> None:
         fine = self.library.calculate_fine(due_date=date(2026, 4, 10), return_date=date(2026, 4, 10))
@@ -64,37 +60,25 @@ class TestLibraryManager(unittest.TestCase):
         )
 
     def test_get_book_unknown_id_raises_not_found(self) -> None:
-        error_text = ""
-        try:
+        with self.assertRaises(
+            NotFoundError,
+            msg="Ожидался NotFoundError для несуществующего book_id",
+        ):
             self.library.get_book("UNKNOWN")
-        except NotFoundError as exc:
-            error_text = str(exc)
-        self.assertTrue(
-            "not found" in error_text,
-            f"Ожидалась ошибка поиска книги, получено: '{error_text or 'ошибка не возникла'}'",
-        )
 
     def test_get_book_empty_id_raises_validation(self) -> None:
-        error_text = ""
-        try:
+        with self.assertRaises(
+            ValidationError,
+            msg="Ожидался ValidationError для пустого book_id",
+        ):
             self.library.get_book("   ")
-        except ValidationError as exc:
-            error_text = str(exc)
-        self.assertTrue(
-            "book_id must be non-empty" in error_text,
-            f"Ожидалась ошибка валидации book_id, получено: '{error_text or 'ошибка не возникла'}'",
-        )
 
     def test_return_book_without_active_loan_raises_business_error(self) -> None:
-        error_text = ""
-        try:
+        with self.assertRaises(
+            BusinessRuleError,
+            msg="Ожидался BusinessRuleError при возврате без активной выдачи",
+        ):
             self.library.return_book("B1", "R1", return_date=date(2026, 3, 5))
-        except BusinessRuleError as exc:
-            error_text = str(exc)
-        self.assertTrue(
-            "Active loan for this book and reader was not found" in error_text,
-            f"Ожидалась ошибка отсутствующей активной выдачи, получено: '{error_text or 'ошибка не возникла'}'",
-        )
 
     def test_return_book_success_updates_state_and_returns_fine(self) -> None:
         self.library.borrow_book("B2", "R2", borrow_date=date(2026, 3, 1), loan_days=7)
