@@ -76,15 +76,17 @@ class TestLibraryManager(unittest.TestCase):
     def test_return_book_without_active_loan_raises_business_error(self) -> None:
         with self.assertRaises(
             BusinessRuleError,
-            msg="Ожидался BusinessRuleError при возврате без активной выдачи",
+            msg="Ожидалась ошибка BusinessRuleError: нельзя вернуть книгу, если читатель эту книгу не брал",
         ):
             self.library.return_book("B1", "R1", return_date=date(2026, 3, 5))
 
     def test_return_book_success_updates_state_and_returns_fine(self) -> None:
         self.library.borrow_book("B2", "R2", borrow_date=date(2026, 3, 1), loan_days=7)
+
         result = self.library.return_book("B2", "R2", return_date=date(2026, 3, 10))
         active_loans_count = len(self.library.get_active_loans())
         available = self.library.get_book("B2").available_copies
+        
         self.assertTrue(
             result["overdue_days"] == 2 and result["fine_amount"] == 20.0 and active_loans_count == 0 and available == 1,
             f"Ожидались overdue_days=2, fine=20.0, active_loans=0, available=1; получено: result={result}, active_loans={active_loans_count}, available={available}",
